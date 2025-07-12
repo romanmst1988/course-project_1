@@ -10,8 +10,17 @@ def report_decorator(filename=None):
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
             file = filename if filename else f"report_{func.__name__}_{datetime.now().strftime('%Y%m%d')}.json"
-            with open(file, "w") as f:
-                json.dump(result, f)
+            try:
+                with open(file, "w", encoding='utf-8') as f:
+                    # Сериализуем datetime и pandas.Timestamp
+                    def json_serializer(obj):
+                        if isinstance(obj, (datetime, pd.Timestamp)):
+                            return obj.strftime('%Y-%m-%d %H:%M:%S')
+                        raise TypeError(f"Type {type(obj)} not serializable")
+
+                    json.dump(result, f, default=json_serializer, ensure_ascii=False)
+            except Exception as e:
+                logging.error(f"Error saving report: {e}")
             return result
 
         return wrapper
@@ -20,7 +29,7 @@ def report_decorator(filename=None):
 
 
 @report_decorator()
-def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> pd.DataFrame:
+def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> dict:
     try:
         if date is None:
             date = datetime.now().strftime("%Y-%m-%d")
@@ -34,7 +43,18 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         )
         filtered = transactions.loc[mask]
 
-        return filtered.groupby(pd.Grouper(key="Дата операции", freq="M"))["Сумма платежа"].sum().to_dict()
+        # Группируем по месяцам и суммируем платежи
+        result = filtered.groupby(pd.Grouper(key="Дата операции", freq="M"))["Сумма платежа"].sum()
+
+        # Преобразуем в словарь с строковыми ключами
+        return {
+            ts.strftime('%Y-%m-%d %H:%M:%S'): float(amount)
+            for ts, amount in result.items()
+        }
+
     except Exception as e:
-        logging.error(f"Error in spending_by_category: {e}")
+        logging.error(f"Error in spending_by_category: {e}", exc_info=True)
         return {}
+
+if __name__ == "__main__":
+    print(report_decorator(filename=None))

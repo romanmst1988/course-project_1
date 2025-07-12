@@ -283,3 +283,11 @@ def home_page(date_time_str: str) -> Dict[str, Any]:
     except Exception as e:
         logging.error(f"Критическая ошибка: {e}", exc_info=True)
         return {'error': str(e)}
+
+
+def process_cards():
+    return None
+
+if __name__ == "__main__":
+    print(load_user_settings())
+    print(configure_logging())

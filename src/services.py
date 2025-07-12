@@ -22,3 +22,6 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
         logging.error(f"Error in investment_bank: {e}")
         return 0.0
 
+if __name__ == "__main__":
+    print(investment_bank)
+
