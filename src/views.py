@@ -1,40 +1,36 @@
 import json
 import logging
+import os
+import time
+from dataclasses import dataclass
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import requests
-import time
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
-from logging.handlers import RotatingFileHandler
-import os
 
 
 def configure_logging():
     """Настройка логирования с ротацией файлов"""
     # Создаем папку для логов
-    log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+    log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
     os.makedirs(log_dir, exist_ok=True)
 
     # Полный путь к файлу лога
-    log_file = os.path.join(log_dir, '../logs/finance_app.log')
+    log_file = os.path.join(log_dir, "../logs/finance_app.log")
 
     # Создаем логгер
-    logger = logging.getLogger('../logs/finance_app.log')
+    logger = logging.getLogger("../logs/finance_app.log")
     logger.setLevel(logging.INFO)
 
     # Формат сообщений
-    formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s'
-    )
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
     # Обработчик для записи в файл с ротацией
     try:
         file_handler = RotatingFileHandler(
-            filename=log_file,
-            maxBytes=5 * 1024 * 1024,  # 5 MB
-            backupCount=3,
-            encoding='utf-8'
+            filename=log_file, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"  # 5 MB
         )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -112,8 +108,8 @@ class FinanceDataFetcher:
         url = f"https://api.exchangerate-api.com/v4/latest/{currency}?apikey=a11c748a999c985289f73542"
         data = self._make_request(url)
 
-        if data and 'rates' in data and 'RUB' in data['rates']:
-            rate = round(data['rates']['RUB'], 2)
+        if data and "rates" in data and "RUB" in data["rates"]:
+            rate = round(data["rates"]["RUB"], 2)
             self._cache[cache_key] = rate
             return rate
 
@@ -130,8 +126,8 @@ class FinanceDataFetcher:
         url = f"https://financialmodelingprep.com/api/v3/quote-short/{symbol}?apikey=NrRoryan8HPhS27PvjlSqdRMuHvkslSU"
         data = self._make_request(url)
 
-        if data and isinstance(data, list) and len(data) > 0 and 'price' in data[0]:
-            price = round(data[0]['price'], 2)
+        if data and isinstance(data, list) and len(data) > 0 and "price" in data[0]:
+            price = round(data[0]["price"], 2)
             self._cache[cache_key] = price
             return price
 
@@ -157,14 +153,10 @@ def get_greeting(time_str: str) -> str:
 def load_transactions(file_path: str) -> pd.DataFrame:
     """Загружает транзакции из Excel файла"""
     try:
-        df = pd.read_excel(
-            file_path,
-            parse_dates=['Дата операции'],
-            date_format='%d.%m.%Y %H:%M:%S'
-        )
+        df = pd.read_excel(file_path, parse_dates=["Дата операции"], date_format="%d.%m.%Y %H:%M:%S")
 
         # Проверка обязательных столбцов
-        required_cols = ['Номер карты', 'Сумма платежа', 'Дата операции']
+        required_cols = ["Номер карты", "Сумма платежа", "Дата операции"]
         missing_cols = [col for col in required_cols if col not in df.columns]
 
         if missing_cols:
@@ -186,43 +178,46 @@ def analyze_cards(transactions: pd.DataFrame) -> List[CardStats]:
         df = transactions.copy()
 
         # Преобразуем номера карт в строки и извлекаем последние 4 цифры
-        df['last_digits'] = df['Номер карты'].astype(str).str.strip().str[-4:]
+        df["last_digits"] = df["Номер карты"].astype(str).str.strip().str[-4:]
 
         # Заменяем пустые значения на '0000'
-        df['last_digits'] = df['last_digits'].replace('nan', '0000')
+        df["last_digits"] = df["last_digits"].replace("nan", "0000")
 
         # Группируем по последним 4 цифрам карты
-        grouped = df.groupby('last_digits')
+        grouped = df.groupby("last_digits")
 
         stats = []
         for card, group in grouped:
             # Проверяем наличие столбца 'Кешбэк'
-            cashback = group['Кешбэк'].sum() if 'Кешбэк' in group.columns else 0.0
+            cashback = group["Кешбэк"].sum() if "Кешбэк" in group.columns else 0.0
 
-            stats.append(CardStats(
-                last_digits = card,
-                total_spent=round(group['Сумма платежа'].sum(), 2),
-                cashback=round(float(cashback), 2)
-            ))
+            stats.append(
+                CardStats(
+                    last_digits=card,
+                    total_spent=round(group["Сумма платежа"].sum(), 2),
+                    cashback=round(float(cashback), 2),
+                )
+            )
 
         return stats
     except Exception as e:
         logging.error(f"Ошибка анализа карт: {e}", exc_info=True)
         return []
 
+
 def get_top_transactions(transactions: pd.DataFrame, n: int = 5) -> List[Transaction]:
     """Возвращает топ-N транзакций по сумме"""
-    if transactions.empty or 'Сумма платежа' not in transactions.columns:
+    if transactions.empty or "Сумма платежа" not in transactions.columns:
         return []
 
     try:
-        top = transactions.nlargest(n, 'Сумма платежа')
+        top = transactions.nlargest(n, "Сумма платежа")
         return [
             Transaction(
-                date=row['Дата операции'].strftime('%d.%m.%Y'),
-                amount=round(float(row['Сумма платежа']), 2),
-                category=str(row.get('Категория', '')),
-                description=str(row.get('Описание', ''))
+                date=row["Дата операции"].strftime("%d.%m.%Y"),
+                amount=round(float(row["Сумма платежа"]), 2),
+                category=str(row.get("Категория", "")),
+                description=str(row.get("Описание", "")),
             )
             for _, row in top.iterrows()
         ]
@@ -231,18 +226,15 @@ def get_top_transactions(transactions: pd.DataFrame, n: int = 5) -> List[Transac
         return []
 
 
-def load_user_settings(file_path: str = '../user_settings.json') -> Dict:
+def load_user_settings(file_path: str = "../user_settings.json") -> Dict:
     """Загружает пользовательские настройки"""
-    default_settings = {
-        'user_currencies': ['USD', 'EUR'],
-        'user_stocks': ['AAPL', 'AMZN', 'GOOGL', 'MSFT', 'TSLA']
-    }
+    default_settings = {"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]}
 
     try:
         with open(file_path) as f:
             settings = json.load(f)
             # Валидация настроек
-            if not all(key in settings for key in ['user_currencies', 'user_stocks']):
+            if not all(key in settings for key in ["user_currencies", "user_stocks"]):
                 raise ValueError("Неполные настройки")
             return settings
     except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
@@ -262,31 +254,30 @@ def home_page(date_time_str: str) -> Dict[str, Any]:
 
         # Получение курсов валют
         currency_rates = [
-            CurrencyRate(currency=curr, rate=fetcher.get_currency_rate(curr))
-            for curr in settings['user_currencies']
+            CurrencyRate(currency=curr, rate=fetcher.get_currency_rate(curr)) for curr in settings["user_currencies"]
         ]
 
         # Получение цен акций
         stock_prices = [
-            StockPrice(stock=stock, price=fetcher.get_stock_price(stock))
-            for stock in settings['user_stocks']
+            StockPrice(stock=stock, price=fetcher.get_stock_price(stock)) for stock in settings["user_stocks"]
         ]
 
         # Формирование ответа
         return {
-            'greeting': get_greeting(date_time_str),
-            'cards': [card.__dict__ for card in analyze_cards(transactions)],
-            'top_transactions': [tx.__dict__ for tx in get_top_transactions(transactions)],
-            'currency_rates': [rate.__dict__ for rate in currency_rates],
-            'stock_prices': [stock.__dict__ for stock in stock_prices]
+            "greeting": get_greeting(date_time_str),
+            "cards": [card.__dict__ for card in analyze_cards(transactions)],
+            "top_transactions": [tx.__dict__ for tx in get_top_transactions(transactions)],
+            "currency_rates": [rate.__dict__ for rate in currency_rates],
+            "stock_prices": [stock.__dict__ for stock in stock_prices],
         }
     except Exception as e:
         logging.error(f"Критическая ошибка: {e}", exc_info=True)
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def process_cards():
     return None
+
 
 if __name__ == "__main__":
     print(load_user_settings())

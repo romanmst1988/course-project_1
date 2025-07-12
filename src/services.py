@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 from typing import List, Dict, Any
@@ -7,7 +6,7 @@ from typing import List, Dict, Any
 def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) -> float:
     try:
         total_saved = 0.0
-        year, month = map(int, month.split('-'))
+        year, month = map(int, month.split("-"))
 
         for transaction in transactions:
             trans_date = datetime.strptime(transaction["Дата операции"], "%Y-%m-%d")
@@ -22,6 +21,6 @@ def investment_bank(month: str, transactions: List[Dict[str, Any]], limit: int) 
         logging.error(f"Error in investment_bank: {e}")
         return 0.0
 
+
 if __name__ == "__main__":
     print(investment_bank)
-
