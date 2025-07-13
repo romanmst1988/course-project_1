@@ -1,16 +1,13 @@
 from __future__ import annotations
-import pytest
-import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, mock_open, patch
-import json
-from pathlib import Path
 
-from src.reports import (
-    spending_by_category,
-    spending_by_weekday,
-    spending_by_workday
-)
+from datetime import datetime, timedelta
+from unittest.mock import mock_open, patch
+
+import pandas as pd
+import pytest
+
+from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
+
 
 class TestReports:
     @pytest.fixture
@@ -23,7 +20,7 @@ class TestReports:
                 (datetime.now() - timedelta(days=100)).strftime("%Y-%m-%d"),
             ],
             "Категория": ["Супермаркеты", "Супермаркеты", "Рестораны", "Супермаркеты"],
-            "Сумма операции": [1000, 2000, 1500, 3000]
+            "Сумма операции": [1000, 2000, 1500, 3000],
         }
         return pd.DataFrame(data)
 
@@ -38,7 +35,7 @@ class TestReports:
         assert len(result) == 2
 
     def test_spending_by_category_error(self, sample_transactions):
-        with patch('pandas.to_datetime', side_effect=Exception("Test error")):
+        with patch("pandas.to_datetime", side_effect=Exception("Test error")):
             with pytest.raises(Exception):
                 spending_by_category(sample_transactions, "Супермаркеты")
 
@@ -52,7 +49,7 @@ class TestReports:
         assert len(result) > 0
 
     def test_spending_by_weekday_error(self, sample_transactions):
-        with patch('pandas.to_datetime', side_effect=Exception("Test error")):
+        with patch("pandas.to_datetime", side_effect=Exception("Test error")):
             with pytest.raises(Exception):
                 spending_by_weekday(sample_transactions)
 
@@ -66,7 +63,7 @@ class TestReports:
         assert len(result) == 2
 
     def test_spending_by_workday_error(self, sample_transactions):
-        with patch('pandas.to_datetime', side_effect=Exception("Test error")):
+        with patch("pandas.to_datetime", side_effect=Exception("Test error")):
             with pytest.raises(Exception):
                 spending_by_workday(sample_transactions)
 
@@ -80,7 +77,7 @@ class TestReports:
         # Мокируем open
         mock_open_handler = mock_open()
 
-        with patch('builtins.open', mock_open_handler):
+        with patch("builtins.open", mock_open_handler):
             # Вызываем тестируемую функцию
             result = spending_by_category(sample_transactions, "Супермаркеты")
 
@@ -92,7 +89,7 @@ class TestReports:
             assert len(result) == 2
 
     def test_report_to_file_error(self, tmp_path, sample_transactions):
-        with patch('builtins.open', side_effect=Exception("Test error")):
-            with patch('src.reports.Path.parent', return_value=tmp_path):
+        with patch("builtins.open", side_effect=Exception("Test error")):
+            with patch("src.reports.Path.parent", return_value=tmp_path):
                 result = spending_by_category(sample_transactions, "Супермаркеты")
                 assert isinstance(result, pd.DataFrame)

@@ -1,9 +1,11 @@
 from __future__ import annotations
-import pytest
-import pandas as pd
+
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
-import json
+from typing import Any, Dict, List
+
+import pandas as pd
+import pytest
+
 
 @pytest.fixture
 def sample_transactions() -> List[Dict[str, Any]]:
@@ -17,10 +19,11 @@ def sample_transactions() -> List[Dict[str, Any]]:
             "Категория": "Супермаркеты" if i % 2 else "Развлечения",
             "Описание": f"Покупка {i}",
             "Кешбэк": 1 * (i + 1),
-            "Сумма операции": 100 * (i + 1)
+            "Сумма операции": 100 * (i + 1),
         }
         for i in range(10)
     ]
+
 
 @pytest.fixture
 def mock_transactions(sample_transactions):
@@ -28,6 +31,7 @@ def mock_transactions(sample_transactions):
     df = pd.DataFrame(sample_transactions)
     df["Дата операции"] = pd.to_datetime(df["Дата операции"])
     return df
+
 
 @pytest.fixture
 def mock_requests(monkeypatch):
@@ -37,10 +41,7 @@ def mock_requests(monkeypatch):
         class MockResponse:
             def __init__(self):
                 self.status_code = 200
-                self._json = {
-                    'rates': {'USD': 75.0, 'EUR': 85.0},
-                    'Global Quote': {'05. price': '150.0'}
-                }
+                self._json = {"rates": {"USD": 75.0, "EUR": 85.0}, "Global Quote": {"05. price": "150.0"}}
 
             def json(self):
                 return self._json

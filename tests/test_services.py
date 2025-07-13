@@ -1,16 +1,11 @@
 from __future__ import annotations
-import pytest
-from datetime import datetime
-from unittest.mock import patch
-import re
 
-from src.services import (
-    profitable_cashback_categories,
-    investment_bank,
-    simple_search,
-    phone_number_search,
-    person_transfers_search
-)
+import pytest
+
+from src.services import (investment_bank, person_transfers_search, phone_number_search,
+                          profitable_cashback_categories, simple_search)
+
+
 class TestServices:
     @pytest.fixture
     def sample_transactions(self):
@@ -20,22 +15,22 @@ class TestServices:
                 "Категория": "Супермаркеты",
                 "Кешбэк": 10.0,
                 "Сумма операции": 1007.0,
-                "Описание": "Покупка в магазине"
+                "Описание": "Покупка в магазине",
             },
             {
                 "Дата операции": "2023-01-02",
                 "Категория": "Рестораны",
                 "Кешбэк": 5.0,
                 "Сумма операции": 493.0,
-                "Описание": "Ужин в ресторане"
+                "Описание": "Ужин в ресторане",
             },
             {
                 "Дата операции": "invalid-date",
                 "Категория": "Invalid",
                 "Кешбэк": "invalid",
                 "Сумма операции": "invalid",
-                "Описание": "Invalid"
-            }
+                "Описание": "Invalid",
+            },
         ]
 
     def test_profitable_cashback_categories(self, sample_transactions):
@@ -55,11 +50,7 @@ class TestServices:
         result = profitable_cashback_categories(sample_transactions, 2023, 1)
         assert "Invalid" not in result
 
-    @pytest.mark.parametrize("limit,expected", [
-        (10, 10.0),
-        (50, 50.0),
-        (100, 100.0)
-    ])
+    @pytest.mark.parametrize("limit,expected", [(10, 10.0), (50, 50.0), (100, 100.0)])
     def test_investment_bank(self, sample_transactions, limit, expected):
         result = investment_bank("2023-01", sample_transactions, limit)
         assert result == expected
@@ -91,7 +82,7 @@ class TestServices:
     def test_phone_number_search(self):
         transactions = [
             {"Описание": "Платеж +7 123 456-78-90", "Категория": "Мобильная связь"},
-            {"Описание": "Без номера", "Категория": "Другое"}
+            {"Описание": "Без номера", "Категория": "Другое"},
         ]
         result = phone_number_search(transactions)
         assert len(result) == 1
@@ -104,7 +95,7 @@ class TestServices:
     def test_person_transfers_search(self):
         transactions = [
             {"Описание": "Перевод Иванов И.", "Категория": "Переводы"},
-            {"Описание": "Платеж в магазин", "Категория": "Супермаркеты"}
+            {"Описание": "Платеж в магазин", "Категория": "Супермаркеты"},
         ]
         result = person_transfers_search(transactions)
         assert len(result) == 1
