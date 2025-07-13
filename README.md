@@ -55,49 +55,77 @@ C:\Users\Admin\PycharmProjects\course-project_1\htmlcov\index.html
 
 Использование
 
-Примеры использования функций:
+## 📌 Основные функции
 
-# Пример использования модуля main.py 
+### Веб-страницы
+- **Главная страница**: отображает приветствие, информацию по картам, топ транзакций, курсы валют и цены акций
+- **Страница событий**: показывает аналитику по расходам и доходам за выбранный период
 
-if __name__ == "__main__":
-    transactions = [
-        {"Дата операции": "2023-01-15", "Сумма операции": 1423},
-        {"Дата операции": "2023-01-20", "Сумма операции": 567},
-        {"Дата операции": "2023-01-25", "Сумма операции": 890},]
-    print(investment_bank("2023-01", transactions, 100))
+### Сервисы
+- Анализ выгодных категорий кешбэка
+- Инвесткопилка с округлением трат
+- Поиск транзакций (простой, по номерам телефонов, переводам физлицам)
 
-    result = home_page("2023-01-01 12:00:00")
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+### Отчеты
+- Траты по категориям
+- Траты по дням недели
+- Траты в рабочие/выходные дни
 
+## 🛠 Технологии
 
-# Пример использования load_user_settings
+- Python 3.13.3
+- Pandas для анализа данных
+- Requests для работы с API
+- Logging для логирования операций
+- Pytest для тестирования
 
+## ⚙️ Установка
+- python -m venv venv
+- pip freeze > requirements.txt
+- poetry add pytest-mock --dev
+- poetry add --group lint isort
+- poetry add --group lint black
+- poetry add --group lint mypy
+- poetry add --group lint flake8
+- poetry add --group dev pytest
+- poetry add requests
+- poetry add pandas
+- poetry add --group dev pytest-cov
+- poetry add --group dev pytest
+- pip install openpyxl pytest-cov
 
-print(load_user_settings())
-    
+## Основной скрипт:
 
-# Пример использования configure_logging
+- python -m src.main
 
-print(configure_logging())
+## Тесты:
 
+- pytest tests/ --cov=src --cov-report=term-missing
+- poetry run pytest --cov
+- pytest --cov=src --cov-report=html
 
-# Пример использования report_decorator
+## Проверка стиля кода:
 
- print(report_decorator(filename=None))
+- flake8 src
+- black --check src
+- mypy src
 
-# Пример использования investment_bank
+### Дополнительно создайте файлы шаблонов:
 
-print(investment_bank)
+1. `.env.template`:
+# API keys for external services
+CURRENCY_API_KEY=your_api_key_here
+STOCK_API_KEY=your_api_key_here
+TESTING=False
 
-# Список тест-кейсов для существующего функционала находящихся в директории tests:
+## user_settings.template.json:
 
-## Модуль test_reports
+json
+{
+  "user_currencies": ["USD", "EUR"],
+  "user_stocks": ["AAPL", "GOOGL", "MSFT"]
+}
 
-## Модуль test_services
-
-## Модуль test_views
-
-## Модуль test_utils
 
 
 Если вы хотите внести свой вклад, пожалуйста, создайте форк репозитория и отправьте пул-реквест.
